@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Evolution Gains Might Just Be Repeated Sampling — Rethinking the Evaluation of Harness Evolution for Agents</title>
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --theme-color: #f06595;
+    --theme-tint: #fdf3fc;
+    --text-color: #1f2328;
+    --muted-color: #6c757d;
+    --border-color: #e9ecef;
+    --serif: "Source Serif 4", "Charter", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 1.06rem;
+    line-height: 1.75;
+    color: var(--text-color);
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+  .post {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3.5rem 1.25rem 4rem;
+  }
+  header.post-header { margin-bottom: 2.5rem; }
+  h1.post-title {
+    font-family: var(--sans);
+    font-size: clamp(1.35rem, 2vw + 0.8rem, 1.9rem);
+    font-weight: 650;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    margin: 0 0 1rem;
+  }
+  .post-subtitle {
+    display: block;
+    font-weight: 450;
+    font-size: 0.72em;
+    color: var(--muted-color);
+    margin-top: 0.4rem;
+  }
+  .post-meta {
+    font-family: var(--sans);
+    color: var(--muted-color);
+    font-size: 0.9rem;
+  }
+  .post-meta sup { font-size: 0.7em; }
+  h2 {
+    font-family: var(--sans);
+    font-size: 1.28rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 2.75rem 0 0.9rem;
+    line-height: 1.35;
+  }
+  p { margin: 0 0 1.1rem; }
+  a { color: var(--theme-color); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { font-weight: 650; }
+
+  .tldr {
+    background: var(--theme-tint);
+    border-left: 3px solid var(--theme-color);
+    border-radius: 0 6px 6px 0;
+    padding: 0.9rem 1.1rem;
+    margin: 0 0 2rem;
+    font-size: 0.98rem;
+  }
+  .tldr p { margin: 0; }
+
+  .finding {
+    border-left: 3px solid var(--theme-color);
+    padding: 0.15rem 0 0.15rem 1rem;
+    margin: 1.4rem 0 1.6rem;
+    font-style: italic;
+    color: #3a3f45;
+  }
+  .finding strong { font-style: normal; }
+
+  figure { margin: 2rem 0; text-align: center; }
+  figure img { max-width: 100%; height: auto; border-radius: 4px; }
+  figure figcaption, .table-caption {
+    font-family: var(--sans);
+    margin-top: 0.6rem;
+    color: var(--muted-color);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+  .table-caption { margin: -0.9rem 0 1.75rem; }
+
+  ul { padding-left: 1.4rem; margin: 0 0 1.1rem; }
+  li { margin-bottom: 0.55rem; }
+
+  table {
+    font-family: var(--sans);
+    border-collapse: collapse;
+    margin: 1.75rem auto;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    width: 100%;
+  }
+  th, td {
+    padding: 0.5rem 0.55rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    white-space: nowrap;
+  }
+  th { border-bottom: 2px solid #ced4da; font-weight: 600; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
+  tr.rule-above td { border-top: 2px solid #ced4da; }
+  td.group { font-weight: 600; color: var(--muted-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .best { font-weight: 700; color: var(--theme-color); }
+  @media (max-width: 640px) {
+    table { display: block; overflow-x: auto; }
+  }
+
+  .references {
+    padding-left: 1.4rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .references li { margin-bottom: 0.6rem; }
+
+  pre {
+    background: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  code { font-family: var(--mono); }
+
+  footer.post-footer {
+    font-family: var(--sans);
+    margin-top: 3.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--muted-color);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<article class="post">
+
+<header class="post-header">
+  <h1 class="post-title">
+    Evolved Harness, or Just More Attempts?
+    <span class="post-subtitle">Rethinking the Evaluation of Harness Evolution for Agents</span>
+  </h1>
+  <div class="post-meta">
+    July 16, 2026
+    <!-- Yike Wang<sup>*1,2</sup>, Huaisheng Zhu<sup>*3</sup>, Zhengyu Hu<sup>2</sup>, Yige Yuan<sup>2</sup>, Zhengyu Chen<sup>3</sup>, Shakti Senthil<sup>2</sup>, Hannaneh Hajishirzi<sup>2</sup>, Yulia Tsvetkov<sup>2</sup>, Pradeep Dasigi<sup>1</sup>, Teng Xiao<sup>*1</sup> -->
+  </div>
+  <!-- <div class="post-affil"> -->
+    <!-- <sup>1</sup> Allen Institute for AI · <sup>2</sup> University of Washington · <sup>3</sup> Independent · <sup>*</sup> Equal Contribution -->
+  <!-- </div> -->
+</header>
+
+<div class="tldr">
+  <p><strong>TL;DR.</strong> Automatic harness evolution is typically evaluated by searching over harnesses with test feedback and then reporting results on the <em>same</em> benchmark. When we instead compare it against simple test-time scaling baselines under matched feedback and inference budgets on Terminal-Bench 2.1, harness evolution fails to beat parallel sampling or sequential refinement, both with or without unit-test feedback, and shows limited generalization to held-out tasks. Much of the reported gain appears to come from repeated sampling and adaptation to the evaluation tasks, not from genuinely better harness design.</p>
+</div>
+
+<p>LLM agents increasingly rely on external harnesses to interact with complex environments. A harness defines the prompts, tools, memory, verification routines, and control logic through which a model observes tasks and acts. Harness engineering can substantially affect agent performance even with a fixed model, yet it remains largely manual: developers inspect trajectories, diagnose failures, and revise the harness.</p>
+
+<p>This has motivated <em>automatic harness evolution</em>, in which agents improve external harnesses. Systems such as Meta-Harness <a href="#ref-1">[1]</a>, AHE <a href="#ref-2">[2]</a>, and AEVO <a href="#ref-3">[3]</a> follow a common search loop: analyze prior trajectories, scores, and failures; propose modifications; evaluate them on benchmark tasks; and repeat. Harness evolution is also increasingly discussed as a path toward recursive self-improvement <a href="#ref-4">[4]</a>. However, the way harness evolution is evaluated deserves a closer look.</p>
+
+<h2>How Is Harness Evolution Evaluated Today?</h2>
+
+<p>In many studies, harness search uses verifier feedback from benchmark tasks, and the final harness is then evaluated on the same public benchmark, such as Terminal-Bench <a href="#ref-5">[5]</a>. This raises two fundamental concerns.</p>
+
+<p><strong>First, harness evolution is itself an iterative search procedure</strong> that repeatedly evaluates and revises candidate harnesses using task feedback. It should be compared with test-time scaling <a href="#ref-6">[6]</a> baselines under comparable feedback and inference budgets to determine whether its gains arise from improved harness design or from additional search alone.</p>
+
+<p><strong>Second, the search and the final evaluation share the same benchmark.</strong> Observed gains may reflect adaptation to task-specific patterns rather than improvements in harness design that transfer to held-out tasks.</p>
+
+<p>Together, these leave a fundamental question unresolved: <em>does harness evolution yield generalizable improvements in harness design, or are its gains primarily due to repeated sampling?</em></p>
+
+<h2>Four Ways to Spend the Same Budget</h2>
+
+<p>We compare four methods under a controlled budget protocol that specifies what feedback each method receives, how it allocates inference compute, and whether it modifies task trajectories or the harness itself. Each method uses a fixed agent policy \(\pi_\theta\) and receives a compute budget \(K\).</p>
+
+<figure>
+  <img src="figs/method_framework.png" alt="Test-time scaling and automatic harness evolution algorithms">
+  <figcaption>Four ways to spend the same budget: explore in width, explore in depth, evolve a shared harness across tasks, or evolve a task-specific harness.</figcaption>
+</figure>
+
+<ul>
+  <li><strong>Parallel sampling</strong> (fixed harness; explore in width) draws \(K\) trajectories independently from the policy using a fixed harness, \(y_1, \dots, y_K \sim \pi_\theta(\cdot \mid x;\, h)\), and selects the final answer by model self-selection or, when available, by the unit tests <a href="#ref-7">[7]</a> <a href="#ref-8">[8]</a>.</li>
+  <li><strong>Sequential refinement</strong> (fixed harness; explore in depth) extends the interaction horizon so that each trajectory builds on the previous trajectory and, when available, its verifier outcome <a href="#ref-9">[9]</a>.</li>
+  <li><strong>Harness evolution</strong> (shared evolving harness) allocates budget to the harness and optimizes across a task distribution: a meta agent \(\mathcal{M}\) reads the summarized experience store and emits the next harness, \(h_k = \mathcal{M}(\Phi(\mathcal{C}_{k-1}))\). We instantiate it with AHE <a href="#ref-2">[2]</a>, with its explore agent disabled so that improvements come from evolving the harness on feedback rather than from retrieving benchmark-specific harnesses externally.</li>
+  <li><strong>Harness scaling</strong> (task-specific evolving harness) is a probe we introduce: the meta agent revises the harness for a single task after each rollout, conditioning on the prior harness and trajectory and, when available, the verifier outcome. This contrasts <em>instance-guided</em> harness adaptation with <em>dataset-guided</em> harness evolution.</li>
+</ul>
+
+<p>All methods start from the same minimal harness: a single bash tool, without skills, middleware, or persistent memory. We evaluate on Terminal-Bench 2.1 with Claude Opus 4.6, GPT-5.4, and GPT-5.4 mini, use \(K = 5\) across methods, and average all results over two independent runs.</p>
+
+<h2>1️⃣ Without Unit Test Cases, Automatic Harness Evolution Underperforms Test-Time Scaling</h2>
+
+<p>We first consider the setting where unit test cases are unavailable, so the agent must rely solely on its own generated trajectories to revise either its solution or its harness.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Claude Opus 4.6</th>
+      <th>GPT-5.4</th>
+      <th>GPT-5.4 mini</th>
+      <th>Average</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Direct sampling using initial harness</td>
+      <td>69.9</td><td>75.3</td><td>59.4</td><td>68.2</td>
+    </tr>
+    <tr class="rule-above"><td colspan="5" class="group">Test-Time Scaling</td></tr>
+    <tr>
+      <td>Parallel Sampling</td>
+      <td>74.7</td><td class="best">79.2</td><td class="best">62.9</td><td class="best">72.3</td>
+    </tr>
+    <tr>
+      <td>Sequential Refinement</td>
+      <td>73.0</td><td>73.0</td><td>61.8</td><td>69.3</td>
+    </tr>
+    <tr class="rule-above"><td colspan="5" class="group">Automatic Harness Evolution</td></tr>
+    <tr>
+      <td>Harness Evolution</td>
+      <td>71.4</td><td>69.7</td><td>61.3</td><td>67.4</td>
+    </tr>
+    <tr>
+      <td>Harness Scaling</td>
+      <td class="best">76.0</td><td>78.1</td><td>61.2</td><td>71.8</td>
+    </tr>
+  </tbody>
+</table>
+<p class="table-caption">Results on Terminal-Bench 2.1 without unit test cases. All results report pass@1. Best results in bold.</p>
+
+<p>Parallel Sampling is the most consistent approach, improving the average score from 68.2 to 72.3 with gains on all three models. In contrast, Harness Evolution fails to outperform the direct sampling baseline on average, and on GPT-5.4 the performance drops to 69.7.</p>
+
+<p>Without an external correctness signal, self-generated feedback is noisy, and even very strong agents struggle to extract useful learning signals from their own trajectories to revise the harness. Revision based on such feedback risks compounding early mistakes.</p>
+
+<h2>2️⃣ With Unit Test Cases, Automatic Harness Evolution Still Underperforms Test-Time Scaling</h2>
+
+<p>We then give every method access to unit test cases, used both as feedback for iterative refinement and as an oracle for selecting the final trajectory. Because oracle selection makes repeated attempts directly comparable, we report both pass@1 and pass@5.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Method</th>
+      <th colspan="2">Claude Opus 4.6</th>
+      <th colspan="2">GPT-5.4</th>
+      <th colspan="2">Average</th>
+    </tr>
+    <tr>
+      <th>pass@1</th><th>pass@5</th>
+      <th>pass@1</th><th>pass@5</th>
+      <th>pass@1</th><th>pass@5</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Direct sampling using initial harness</td>
+      <td>69.9</td><td>&ndash;</td>
+      <td>75.9</td><td>&ndash;</td>
+      <td>72.9</td><td>&ndash;</td>
+    </tr>
+    <tr class="rule-above"><td colspan="7" class="group">Test-Time Scaling</td></tr>
+    <tr>
+      <td>Parallel Sampling</td>
+      <td class="best">84.8</td><td>84.8</td>
+      <td class="best">87.1</td><td>87.1</td>
+      <td class="best">86.0</td><td>86.0</td>
+    </tr>
+    <tr>
+      <td>Sequential Refinement</td>
+      <td>83.1</td><td class="best">90.4</td>
+      <td>85.4</td><td class="best">93.3</td>
+      <td>84.3</td><td class="best">91.8</td>
+    </tr>
+    <tr class="rule-above"><td colspan="7" class="group">Automatic Harness Evolution</td></tr>
+    <tr>
+      <td>Harness Evolution</td>
+      <td>73.0</td><td>83.2</td>
+      <td>78.6</td><td>89.3</td>
+      <td>75.8</td><td>86.2</td>
+    </tr>
+    <tr>
+      <td>Harness Scaling</td>
+      <td>83.1</td><td>89.9</td>
+      <td>82.0</td><td>88.8</td>
+      <td>82.6</td><td>89.3</td>
+    </tr>
+  </tbody>
+</table>
+<p class="table-caption">Results on Terminal-Bench 2.1 when unit test cases are available. Best results in bold.</p>
+
+<p>All methods improve substantially over direct sampling, but neither Harness Evolution nor Harness Scaling outperforms the simpler baselines: Parallel Sampling achieves the best pass@1 and Sequential Refinement achieves the best pass@5.</p>
+
+<p>If harness revision genuinely produced better harnesses, the improvement should show up in pass@1. Instead, most of the benefit appears when we can select among multiple trajectories. This suggests the gains largely stem from making multiple attempts, an effect that Parallel Sampling and Sequential Refinement achieve more directly, rather than from improved harness design enabling the agent to solve previously unsolved tasks.</p>
+
+<h2>3️⃣ Evolved Harnesses Barely Transfer to Held-Out Tasks</h2>
+
+<p>Finally, we test generalization directly. We split Terminal-Bench 2.1 into 45 training tasks, 10 validation tasks, and 34 held-out test tasks, run Harness Evolution on the training set with unit test feedback, select the best evolved harness by validation performance, and report pass@1 on the test set.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Claude Opus 4.6</th>
+      <th>GPT-5.4</th>
+      <th>Average</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Direct sampling using initial harness</td>
+      <td>63.3</td><td>72.1</td><td>67.7</td>
+    </tr>
+    <tr>
+      <td>Harness Evolution</td>
+      <td>64.5 <span style="color:var(--muted-color)">(+1.2)</span></td>
+      <td>72.1 <span style="color:var(--muted-color)">(+0.0)</span></td>
+      <td>68.3 <span style="color:var(--muted-color)">(+0.6)</span></td>
+    </tr>
+  </tbody>
+</table>
+<p class="table-caption">Pass@1 on held-out test tasks before and after Harness Evolution. Relative gains in parentheses.</p>
+
+<p>The evolved harness yields an average gain of 0.6 points, which stands in sharp contrast to the improvements Harness Evolution produces when evaluated on the same tasks it is optimized on.</p>
+
+<p>The discrepancy suggests task-specific adaptation rather than transferable harness design. When search and evaluation tasks are disjoint, Harness Evolution shows limited generalization and a strong tendency to overfit the search set.</p>
+
+<h2>Why Is Harness Evolution Less Effective Here?</h2>
+
+<p>While this may simply reflect that current models are not yet capable enough to revise the entire harness, we think the choice of tasks also matters. Agents already achieve relatively high scores on Terminal-Bench, so the remaining failures may stem from limitations in the underlying model rather than deficiencies in the harness. Terminal-Bench may also be relatively insensitive to harness design, since a shell tool and a basic prompt already suffice for most solvable tasks. These observations suggest that future work could explore tasks with substantial headroom and where specialized tools, skills, or workflows are crucial to success.</p>
+
+<h2>Takeaways for Evaluating Harness Evolution</h2>
+
+<ul>
+  <li><strong>Automatic harness evolution does not consistently outperform simple test-time scaling.</strong> Under comparable feedback and inference budgets, Parallel Sampling and Sequential Refinement remain strong and meaningful baselines that harness evolution methods should be compared against.</li>
+  <li><strong>Evolved harnesses show limited generalization.</strong> When search and evaluation tasks are disjoint, the evolved harness yields only marginal gains on held-out tasks, suggesting that improvements discovered during search may not transfer.</li>
+  <li><strong>Better benchmarks for automatic harness design are needed.</strong> Future benchmarks should contain tasks with substantial headroom for improvement and where performance depends heavily on the harness.</li>
+</ul>
+
+<p>Our code is available at <a href="https://github.com/rethinking-harness-evolution">github.com/rethinking-harness-evolution</a>.</p>
+
+<h2>References</h2>
+
+<ol class="references">
+  <li id="ref-1">Yoonho Lee, Roshen Nair, Qizheng Zhang, Kangwook Lee, Omar Khattab, and Chelsea Finn. <a href="https://arxiv.org/abs/2603.28052">Meta-Harness: End-to-End Optimization of Model Harnesses</a>. arXiv:2603.28052, 2026.</li>
+  <li id="ref-2">Jiahang Lin et al. <a href="https://arxiv.org/abs/2604.25850">Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses</a>. arXiv:2604.25850, 2026.</li>
+  <li id="ref-3">Jiayi Zhang et al. <a href="https://arxiv.org/abs/2605.13821">Harnessing Agentic Evolution</a>. arXiv:2605.13821, 2026.</li>
+  <li id="ref-4">Lilian Weng. <a href="https://lilianweng.github.io/posts/2026-07-04-harness/">Harness Engineering for Self-Improvement</a>. Lil'Log, 2026.</li>
+  <li id="ref-5">Mike A. Merrill et al. <a href="https://arxiv.org/abs/2601.11868">Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces</a>. arXiv:2601.11868, 2026.</li>
+  <li id="ref-6">Charlie Snell, Jaehoon Lee, Kelvin Xu, and Aviral Kumar. <a href="https://arxiv.org/abs/2408.03314">Scaling LLM Test-Time Compute Optimally Can Be More Effective than Scaling Model Parameters</a>. arXiv:2408.03314, 2024.</li>
+  <li id="ref-7">Xuezhi Wang et al. <a href="https://arxiv.org/abs/2203.11171">Self-Consistency Improves Chain of Thought Reasoning in Language Models</a>. arXiv:2203.11171, 2022.</li>
+  <li id="ref-8">Bradley Brown et al. <a href="https://arxiv.org/abs/2407.21787">Large Language Monkeys: Scaling Inference Compute with Repeated Sampling</a>. arXiv:2407.21787, 2024.</li>
+  <li id="ref-9">Aman Madaan et al. <a href="https://arxiv.org/abs/2303.17651">Self-Refine: Iterative Refinement with Self-Feedback</a>. Advances in Neural Information Processing Systems 36, 2023.</li>
+</ol>
+
+<h2>Contact Us</h2>
+
+<p>Feel free to find more details in the paper. This is still a work in progress; if you have any questions or comments, or notice any issues, contact us at <a href="mailto:yikewang@cs.washington.edu">yikewang@cs.washington.edu</a>, <a href="mailto:tengx@allenai.org">tengx@allenai.org</a>, and <a href="mailto:zhuhs1998@gmail.com">zhuhs1998@gmail.com</a>. If you found this work helpful, please consider starring the repository and citing us:</p>
+
+<pre><code>@misc{wang2026rethinkingharnessevolution,
+  title  = {Rethinking the Evaluation of Harness Evolution for Agents},
+  author = {Yike Wang and Huaisheng Zhu and Zhengyu Hu and Yige Yuan and Zhengyu Chen and Shakti Senthil and Hannaneh Hajishirzi and Yulia Tsvetkov and Pradeep Dasigi and Teng Xiao},
+  journal = {arXiv preprint arXiv:2607.12227},
+  year = {2026}
+}</code></pre>
+
+<footer class="post-footer">
+  Last updated: July 16, 2026.
+</footer>
+
+</article>
+</body>
+</html>
